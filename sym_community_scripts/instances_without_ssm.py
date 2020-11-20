@@ -125,7 +125,11 @@ class InstancesWithoutSSM(Script):
     def check_ssm_instances(self):
         self._section_start("Checking SSM Instances")
 
-        instances = self.ssm.describe_instance_information()["InstanceInformationList"]
+        instances = [
+            i
+            for page in self.ssm.get_paginator("describe_instance_information").paginate()
+            for i in page["InstanceInformationList"]
+        ]
         instance_ids = {i["InstanceId"] for i in instances}
 
         if (missing_ids := self.instances.keys() - instance_ids) :
