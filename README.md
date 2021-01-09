@@ -4,7 +4,6 @@
 1. Clone this repo
 2. Install `poetry`
 3. Run `poetry install`
-4. Run `poetry build`
 
 ## Find instances without SSM
 
