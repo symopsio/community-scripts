@@ -11,6 +11,4 @@
 
 ## Find UserId in AWS SSO Identity Store given a Username
 
-Pass you own **Identity store ID** and desired **Username** to the command below
-
-`poetry run python identitystore_userids d-xxxxxxxxxx bob@acme.com`
+`poetry run identitystore_userids bob@acme.com`
