@@ -14,13 +14,6 @@ class IdentityStore:
         else:
             self.identitystore_id = self._pull_identitystore_id()
 
-    def _list_users(self, **filters):
-
-        attrval_filters = [{"AttributePath": k, "AttributeValue": v} for k, v in filters.items()]
-
-        return self.identitystore.list_users(
-            IdentityStoreId=self.identitystore_id, MaxResults=50, Filters=attrval_filters
-        )
 
     def _pull_identitystore_id(self):
 
@@ -43,25 +36,33 @@ class IdentityStore:
         )
         sys.exit(error)
 
-    def get_userid(self, username):
+    def get_userids(self, usernames):
 
-        response = self._list_users(UserName=username)
+        userids = []
 
-        users = response.get("Users", [])
+        for username in usernames:
+            response = self.identitystore.list_users(
+                IdentityStoreId=self.identitystore_id, MaxResults=50, Filters=[{"AttributePath": "UserName", "AttributeValue": username}]
+            )
 
-        if len(users) < 1:
-            sys.exit(f"Could not find a UserId for Username: {username}")
+            users = response.get("Users", [])
 
-        return users[0]["UserId"]
+            if len(users) < 1:
+                sys.exit(f"Could not find a UserId for Username: {username}")
+
+            userids.append(users[0]["UserId"])
+
+        return userids
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--identitystore_id")
-    parser.add_argument("username")
+    parser.add_argument("usernames", nargs='+')
     args = parser.parse_args()
 
     idstore = IdentityStore(args.identitystore_id)
-    userid = idstore.get_userid(args.username)
+    userids = idstore.get_userids(args.usernames)
 
-    print(userid)
+    for userid in userids:
+        print(userid)
