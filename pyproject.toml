@@ -4,9 +4,9 @@ line-length = 100
 [tool.poetry]
 name = "sym-community-scripts"
 version = "0.1.0"
-description = "Sym community scripts."
+description = "Open Source scripts for use by the Sym community."
 authors = ["Yasyf Mohamedali <yasyf@symops.io>"]
-license = "MIT"
+license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
 python = "^3.8"
