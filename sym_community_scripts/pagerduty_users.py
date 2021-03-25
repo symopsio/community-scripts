@@ -47,7 +47,7 @@ def main(token, match, email_only, outfile):
     if outfile:
         with open(outfile, 'w') as csvfile:
             csv.writer(csvfile, quoting=csv.QUOTE_ALL).writerows(userdata)
-        print(f"\nWrote to {outfile} ")
+        print(f"\nWrote {len(userdata)} rows to {outfile} ")
 
 
 if __name__ == "__main__":
