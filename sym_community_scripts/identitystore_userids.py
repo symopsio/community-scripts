@@ -1,7 +1,17 @@
+# Author: Adam Buggia <adam@symops.io>
+# Author: Joshua Timberman <joshua@symops.io>
+#
+# Copyright: (c) SymOps, Inc.
+# License: BSD-3-Clause
+#
+
 import boto3
 import argparse
 import sys
 import botocore
+import csv
+import click
+from tabulate import tabulate
 
 
 class IdentityStore:
@@ -14,7 +24,6 @@ class IdentityStore:
         else:
             self.identitystore_id = self._pull_identitystore_id()
 
-
     def _pull_identitystore_id(self):
 
         try:
@@ -22,7 +31,6 @@ class IdentityStore:
 
         except botocore.errorfactory.AccessDeniedException:
             sys.exit("Access Denied: you need permissions to list SSO Instances")
-
 
         instances = response.get("Instances", [])
 
@@ -38,11 +46,13 @@ class IdentityStore:
 
     def get_userids(self, usernames):
 
-        userids = []
+        userdata = [["Email", "IdentityStoreId", "PrincipalId"]]
 
         for username in usernames:
             response = self.identitystore.list_users(
-                IdentityStoreId=self.identitystore_id, MaxResults=50, Filters=[{"AttributePath": "UserName", "AttributeValue": username}]
+                IdentityStoreId=self.identitystore_id,
+                MaxResults=50,
+                Filters=[{"AttributePath": "UserName", "AttributeValue": username}],
             )
 
             users = response.get("Users", [])
@@ -50,19 +60,31 @@ class IdentityStore:
             if len(users) < 1:
                 sys.exit(f"Could not find a UserId for Username: {username}")
 
-            userids.append(users[0]["UserId"])
+            userdata.append([username, self.identitystore_id, users[0]["UserId"]])
 
-        return userids
+        return userdata
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--identitystore_id")
-    parser.add_argument("usernames", nargs='+')
-    args = parser.parse_args()
+@click.command()
+@click.option("--identitystore-id", help="Specify a particular IdentityStoreId")
+@click.option("--outfile", help="Write output to a CSV file")
+@click.option("--infile", help="Read in a CSV for users to look up")
+@click.argument("usernames", nargs=-1)
+def main(identitystore_id, outfile, infile, usernames):
 
-    idstore = IdentityStore(args.identitystore_id)
-    userids = idstore.get_userids(args.usernames)
+    if infile:
+        usernames = []
+        with open(infile) as csvfile:
+            csv_reader = list(csv.reader(csvfile, delimiter=","))
+            for rows in csv_reader[1:]:
+                usernames.append(rows[0])
 
-    for userid in userids:
-        print(userid)
+    idstore = IdentityStore(identitystore_id)
+    userdata = idstore.get_userids(usernames)
+
+    print(tabulate(userdata[1:], headers=userdata[0]))
+
+    if outfile:
+        with open(outfile, "w") as csvfile:
+            csv.writer(csvfile, quoting=csv.QUOTE_ALL).writerows(userdata)
+        print(f"\nWrote {len(userdata)} rows to {outfile}")
