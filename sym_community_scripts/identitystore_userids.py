@@ -57,7 +57,7 @@ class IdentityStore:
 
             users = response.get("Users", [])
 
-            if len(users) < 1:
+            if not users:
                 sys.exit(f"Could not find a UserId for Username: {username}")
 
             userdata.append([username, self.identitystore_id, users[0]["UserId"]])
