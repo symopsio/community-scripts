@@ -25,7 +25,7 @@ def session(api_token):
 @click.option("--email-only", is_flag=True, default=False, help="Show only the email addresses")
 @click.option("--outfile", help="Write output to a CSV file")
 def main(token, match, email_only, outfile):
-    userdata = []
+    userdata = [["Email", "Name"]]
 
     if not token:
         print("You must supply a token, use `--token` or export `PD_API_TOKEN` in your shell")
