@@ -8,7 +8,7 @@
 ## Find instances without SSM
 
 ```
-poetry run python -m sym_community_scripts.instances_without_ssm
+poetry run instances_without_ssm
 ```
 
 ## Find UserId in AWS SSO Identity Store given a Username

@@ -1,7 +1,9 @@
+from abc import ABC, abstractmethod
+
 from termcolor import cprint
 
 
-class Script:
+class Script(ABC):
     def _section_start(self, text):
         cprint(f"\n{text}\n", "white", attrs=["bold"])
 
@@ -16,3 +18,7 @@ class Script:
 
     def _error(self, text):
         cprint(f"\n{text}", "red")
+
+    @abstractmethod
+    def run(self, *args, **kwargs):
+        pass
