@@ -6,25 +6,29 @@
 #
 
 import boto3
-import argparse
 import sys
 import botocore
 import csv
 import click
 from tabulate import tabulate
+from collections import namedtuple
 
 
 class IdentityStore:
     def __init__(self, identitystore_id=None):
+        self.Elements = namedtuple("Elements", "arn store_id")
         self.identitystore = boto3.client("identitystore")
         self.ssoadmin = boto3.client("sso-admin")
+        self.instance_elements = self._pull_identitystore_elements()
 
         if identitystore_id:
             self.identitystore_id = identitystore_id
         else:
-            self.identitystore_id = self._pull_identitystore_id()
+            self.identitystore_id = self.instance_elements.store_id
 
-    def _pull_identitystore_id(self):
+        self.arn = self.instance_elements.arn
+
+    def _pull_identitystore_elements(self):
 
         try:
             response = self.ssoadmin.list_instances()
@@ -35,18 +39,18 @@ class IdentityStore:
         instances = response.get("Instances", [])
 
         if len(instances) == 1:
-            return instances[0]["IdentityStoreId"]
+            return self.Elements(*instances[0].values())
 
         error = (
             "No AWS SSO instances found for the current account"
             if len(instances) == 0
-            else "Found more than one AWS SSO instance. Please specify the Identity store ID via the --identitystore_id option"
+            else "Found more than one AWS SSO instance. Please specify the Identity store ID via the --identitystore-id option"
         )
         sys.exit(error)
 
     def get_userids(self, usernames):
 
-        userdata = [["Email", "IdentityStoreId", "PrincipalId"]]
+        userdata = [["Email", "InstanceArn", "PrincipalId"]]
 
         for username in usernames:
             response = self.identitystore.list_users(
@@ -60,7 +64,7 @@ class IdentityStore:
             if not users:
                 sys.exit(f"Could not find a UserId for Username: {username}")
 
-            userdata.append([username, self.identitystore_id, users[0]["UserId"]])
+            userdata.append([username, self.arn, users[0]["UserId"]])
 
         return userdata
 
@@ -87,4 +91,7 @@ def main(identitystore_id, outfile, infile, usernames):
     if outfile:
         with open(outfile, "w") as csvfile:
             csv.writer(csvfile, quoting=csv.QUOTE_ALL).writerows(userdata)
-        print(f"\nWrote {len(userdata)} rows to {outfile}")
+        print(f"\nWrote {len(userdata) - 1} rows to {outfile}")
+
+if __name__ == "__main__":
+    main()
