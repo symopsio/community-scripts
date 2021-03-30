@@ -11,14 +11,8 @@
 poetry run instances_without_ssm
 ```
 
-## Find UserId in AWS SSO Identity Store given a Username
+## Populate a User CSV File
 
 ```
-poetry run identitystore_userids bob@acme.com
-```
-
-## Return a list of emails and names from PagerDuty
-
-```
-poetry run python sym_community_scripts/pagerduty_users.py --outfile output.csv
+poetry run populate_users users.csv
 ```

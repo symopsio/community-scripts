@@ -78,20 +78,24 @@ class PopulateUsers(Script):
 
             self._ensure_integration(integration)
 
+            emails = self._missing_emails(integration)
+            if not emails:
+                continue
+
             try:
-                if (emails := self._missing_emails(integration)) :
-                    klass.prompt_for_creds()
-                    results = klass.fetch(emails)
-                else:
-                    continue
+                klass.prompt_for_creds()
+                results = klass.fetch(emails)
             except IntegrationException as e:
                 click.secho(f"Error: {e.format_message()}", fg="red")
                 continue
 
             for email, value in results.items():
                 self.db[email][integration] = value
-
             click.secho(f"Updated {len(results)} rows!", fg="green")
+
+            remaining = len(emails) - len(results)
+            if remaining:
+                click.secho(f"There are {remaining} blanks.", fg="yellow")
 
         self.write_db()
 

@@ -2,7 +2,7 @@ from typing import Dict, Generator, Optional, Set
 
 import boto3
 import inquirer
-from botocore.exceptions import BotoCoreError
+from botocore.exceptions import BotoCoreError, ClientError
 
 from .integration import Integration, IntegrationException
 
@@ -37,7 +37,7 @@ class AWS_SSO(Integration, slug="aws_sso"):
             raise IntegrationException(
                 "Access Denied: Please ensure you can ListInstances for AWS SSO Admin."
             )
-        except BotoCoreError as e:
+        except (ClientError, BotoCoreError) as e:
             raise IntegrationException(str(e))
 
         return {i["InstanceArn"]: i["IdentityStoreId"] for i in instances["Instances"]}
