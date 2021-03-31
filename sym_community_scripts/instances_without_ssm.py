@@ -168,5 +168,9 @@ class InstancesWithoutSSM(Script):
         self.check_ssm_instances()
 
 
-if __name__ == "__main__":
+def main():
     InstancesWithoutSSM().run()
+
+
+if __name__ == "__main__":
+    main()
