@@ -38,7 +38,7 @@ class IAM(Integration, slug="iam"):
 
         try:
             user = iam.get_user(UserName=email)
-            userid = user["User"]["UserId"]
+            userid = user["User"]["Arn"]
         except iam.exceptions.NoSuchEntityException:
             pass
 
