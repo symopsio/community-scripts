@@ -7,7 +7,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from .integration import Integration, IntegrationException
 
 
-class AWSPaginator:
+class _AWSPaginator:
     def __init__(self, client, method, key) -> None:
         self.fn = getattr(client, method)
         self.key = key
@@ -25,7 +25,34 @@ class AWSPaginator:
             self.next_token = res["NextToken"]
 
 
-class AWS_SSO(Integration, slug="aws_sso"):
+class IAM(Integration, slug="iam"):
+    def __init__(self) -> None:
+        self.session = None
+
+    def prompt_for_creds(self) -> None:
+        pass
+
+    def _fetch_user(self, email):
+        iam = boto3.client("iam")
+        userid = None
+
+        try:
+            user = iam.get_user(UserName=email)
+            userid = user["User"]["Arn"]
+        except iam.exceptions.NoSuchEntityException:
+            pass
+
+        return userid
+
+    def fetch(self, emails: Set[str]) -> Dict[str, str]:
+        results = {}
+        for email in emails:
+            if (id := self._fetch_user(email)) :
+                results[email] = id
+        return results
+
+
+class SSO(Integration, slug="aws_sso"):
     def __init__(self) -> None:
         self.instances = []
 
@@ -56,7 +83,7 @@ class AWS_SSO(Integration, slug="aws_sso"):
 
     def _fetch_identitystore_user(self, instance, email) -> Optional[str]:
         identitystore = boto3.client("identitystore")
-        paginator = AWSPaginator(identitystore, "list_users", "Users")
+        paginator = _AWSPaginator(identitystore, "list_users", "Users")
         for user in paginator.paginate(
             IdentityStoreId=instance,
             Filters=[{"AttributePath": "UserName", "AttributeValue": email}],

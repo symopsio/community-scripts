@@ -14,7 +14,7 @@ class PagerDuty(Integration, slug="pagerduty"):
         api_key = click.prompt("Enter PagerDuty API Key")
         self.session = pdpyras.APISession(api_key)
         try:
-            self.session.get('users')
+            self.session.get("users")
         except pdpyras.PDClientError:
             raise IntegrationException("Invalid API Key")
 

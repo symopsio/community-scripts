@@ -1,4 +1,4 @@
-from .aws_sso import AWS_SSO  # noqa
+from .aws import SSO, IAM  # noqa
 from .pagerduty import PagerDuty  # noqa
 from .populate_users import populate_users
 
