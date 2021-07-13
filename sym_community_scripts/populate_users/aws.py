@@ -1,3 +1,4 @@
+from functools import cached_property
 from typing import Dict, Generator, Optional, Set
 
 import boto3
@@ -26,29 +27,32 @@ class _AWSPaginator:
 
 
 class IAM(Integration, slug="iam"):
-    def __init__(self) -> None:
-        self.session = None
+    @cached_property
+    def _iam(self):
+        return boto3.client("iam")
 
     def prompt_for_creds(self) -> None:
-        pass
-
-    def _fetch_user(self, email):
-        iam = boto3.client("iam")
-        userid = None
-
         try:
-            user = iam.get_user(UserName=email)
-            userid = user["User"]["Arn"]
-        except iam.exceptions.NoSuchEntityException:
-            pass
+            self._iam.list_users()
+        except self._iam.exceptions.AccessDeniedException:
+            raise IntegrationException(
+                "Access Denied: Please ensure you can ListUsers for AWS IAM."
+            )
+        except (ClientError, BotoCoreError) as e:
+            raise IntegrationException(str(e))
 
-        return userid
+    def _fetch_user(self, user_name: str):
+        try:
+            user = self._iam.get_user(UserName=user_name)
+        except self._iam.exceptions.NoSuchEntityException:
+            return None
+        return user["User"]["Arn"]
 
-    def fetch(self, emails: Set[str]) -> Dict[str, str]:
+    def fetch(self, user_names: Set[str]) -> Dict[str, str]:
         results = {}
-        for email in emails:
-            if (id := self._fetch_user(email)) :
-                results[email] = id
+        for user_name in user_names:
+            if (id := self._fetch_user(user_name)) :
+                results[user_name] = id
         return results
 
 
