@@ -33,11 +33,9 @@ class IAM(Integration, slug="iam"):
 
     def prompt_for_creds(self) -> None:
         try:
-            self._iam.list_users()
+            self._iam.get_user()
         except self._iam.exceptions.AccessDeniedException:
-            raise IntegrationException(
-                "Access Denied: Please ensure you can ListUsers for AWS IAM."
-            )
+            raise IntegrationException("Access Denied: Please ensure you can GetUser for AWS IAM.")
         except (ClientError, BotoCoreError) as e:
             raise IntegrationException(str(e))
 
