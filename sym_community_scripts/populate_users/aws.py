@@ -39,18 +39,18 @@ class IAM(Integration, slug="iam"):
         except (ClientError, BotoCoreError) as e:
             raise IntegrationException(str(e))
 
-    def _fetch_user(self, user_name: str):
+    def _fetch_user(self, email: str):
         try:
-            user = self._iam.get_user(UserName=user_name)
+            user = self._iam.get_user(UserName=email)
         except self._iam.exceptions.NoSuchEntityException:
             return None
         return user["User"]["Arn"]
 
-    def fetch(self, user_names: Set[str]) -> Dict[str, str]:
+    def fetch(self, emails: Set[str]) -> Dict[str, str]:
         results = {}
-        for user_name in user_names:
-            if (id := self._fetch_user(user_name)) :
-                results[user_name] = id
+        for email in emails:
+            if (id := self._fetch_user(email)) :
+                results[email] = id
         return results
 
 
