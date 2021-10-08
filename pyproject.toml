@@ -18,6 +18,7 @@ click = "^7.1.2"
 tabulate = "^0.8.9"
 inquirer = "^2.7.0"
 xattr = "^0.9.7"
+requests = "^2.26.0"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"

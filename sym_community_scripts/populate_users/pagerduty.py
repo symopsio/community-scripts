@@ -11,7 +11,7 @@ class PagerDuty(Integration, slug="pagerduty"):
         self.session = None
 
     def prompt_for_creds(self) -> None:
-        api_key = click.prompt("Enter PagerDuty API Key")
+        api_key = self.env_or_prompt("PAGERDUTY_API_KEY", "pagerDuty API Key")
         self.session = pdpyras.APISession(api_key)
         try:
             self.session.get("users")
