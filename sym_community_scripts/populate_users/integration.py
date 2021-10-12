@@ -1,8 +1,8 @@
+import os
 from abc import ABC, abstractmethod
 from typing import Dict, List, Type
 
-import os
-
+import click
 from click import ClickException
 
 

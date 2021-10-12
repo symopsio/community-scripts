@@ -2,7 +2,6 @@ from typing import Any, Dict, Generator, Set, Tuple
 
 import click
 import requests
-
 from requests.exceptions import InvalidJSONError
 
 from .integration import Integration, IntegrationException
