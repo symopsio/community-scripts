@@ -49,7 +49,7 @@ class PopulateUsers(Script):
     def _integration_type(self, integration: str) -> str:
         if integration in Integration._registry.keys():
             return integration
-        if (cached := self._parse_xattrs().get(integration)) :
+        if cached := self._parse_xattrs().get(integration):
             return cached
         return inquirer.list_input(
             f"Select Connector for Integration '{integration}'",

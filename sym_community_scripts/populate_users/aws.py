@@ -49,7 +49,7 @@ class IAM(Integration, slug="iam"):
     def fetch(self, emails: Set[str]) -> Dict[str, str]:
         results = {}
         for email in emails:
-            if (id := self._fetch_user(email)) :
+            if id := self._fetch_user(email):
                 results[email] = id
         return results
 
@@ -96,6 +96,6 @@ class SSO(Integration, slug="aws_sso"):
         results = {}
         for instance in self.instances:
             for email in emails:
-                if (id := self._fetch_identitystore_user(instance, email)) :
+                if id := self._fetch_identitystore_user(instance, email):
                     results[email] = id
         return results

@@ -111,7 +111,7 @@ class InstancesWithoutSSM(Script):
             profile for profile, roles in self.profile_roles.items() if roles & ssm_roles
         }
 
-        if (bad_profiles := self.instance_profiles.keys() - ssm_profiles) :
+        if bad_profiles := self.instance_profiles.keys() - ssm_profiles:
             self._error(f"Found {len(bad_profiles)} Bad Instance Profiles")
 
             for profile in bad_profiles:
@@ -132,7 +132,7 @@ class InstancesWithoutSSM(Script):
         ]
         instance_ids = {i["InstanceId"] for i in instances}
 
-        if (missing_ids := self.instances.keys() - instance_ids) :
+        if missing_ids := self.instances.keys() - instance_ids:
             self.report_missing_ssm_instances(missing_ids)
         else:
             self._section_end("No Instances Missing in SSM!")
