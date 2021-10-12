@@ -1,0 +1,17 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@1.0.0
+  docker: circleci/docker@1.5.0
+  sym: sym/python@1.4.37
+
+workflows:
+
+  main:
+    jobs:
+      - sym/lint:
+          context:
+            - DockerHub
+      - python/test:
+          pkg-manager: poetry
+          test-tool: pytest
