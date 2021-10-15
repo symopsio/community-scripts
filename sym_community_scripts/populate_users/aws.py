@@ -51,7 +51,9 @@ class IAM(Integration, slug="iam"):
             if "ValidationError" in error_message:
                 raise IntegrationException("You must authenticate using an IAM User's credentials.")
             elif "AccessDenied" in error_message:
-                raise IntegrationException("Access Denied: Please ensure you can GetUser for AWS IAM.")
+                raise IntegrationException(
+                    "Access Denied: Please ensure you can GetUser for AWS IAM."
+                )
 
             raise IntegrationException(str(e))
 
@@ -107,7 +109,9 @@ class SSO(Integration, slug="aws_sso"):
         if len(options) == 1:
             return list(options.keys())[0]
 
-        question = inquirer.List("instance_arn", message="Which Instance ARN?", choices=options.items())
+        question = inquirer.List(
+            "instance_arn", message="Which Instance ARN?", choices=options.items()
+        )
         return inquirer.prompt([question])["instance_arn"]
 
     def _fetch_identitystore_user(self, instance, email) -> Optional[str]:

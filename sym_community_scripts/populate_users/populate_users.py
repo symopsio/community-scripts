@@ -31,7 +31,9 @@ class PopulateUsers(Script):
         all_user_data = {}
         with csv_path.open() as f:
             for user_data in csv.DictReader(f):
-                email = user_data.get(f"sym{cls.SERVICE_KEY_DELIMITER}cloud") or user_data.get("email")
+                email = user_data.get(f"sym{cls.SERVICE_KEY_DELIMITER}cloud") or user_data.get(
+                    "email"
+                )
                 all_user_data[email] = user_data
         return all_user_data
 
@@ -42,7 +44,11 @@ class PopulateUsers(Script):
         return list(next(iter(self.db.values())).keys())
 
     def _default_integrations(self) -> Set[str]:
-        return set(self._integrations()) - {"email", f"sym{self.SERVICE_KEY_DELIMITER}cloud", "User ID"}
+        return set(self._integrations()) - {
+            "email",
+            f"sym{self.SERVICE_KEY_DELIMITER}cloud",
+            "User ID",
+        }
 
     def _integration_type(self, integration: str) -> str:
         if integration in Integration._registry.keys():
