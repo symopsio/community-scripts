@@ -1,6 +1,8 @@
+import os
 from abc import ABC, abstractmethod
 from typing import Dict, List, Type
 
+import click
 from click import ClickException
 
 
@@ -31,3 +33,11 @@ class Integration(ABC):
     def is_supported(cls, type_: str) -> bool:
         """Check whether the provided ``type_`` matches any registered Integrations."""
         return type_ in cls._registry
+
+    def env_or_prompt(self, env_var: str, label: str) -> str:
+        """
+        Get a value from the supplied environment variable key or prompt if unspecified
+        """
+        if env_value := os.environ.get(env_var):
+            return env_value
+        return click.prompt(f"Enter {label}")

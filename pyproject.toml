@@ -1,11 +1,8 @@
-[tool.black]
-line-length = 100
-
 [tool.poetry]
 name = "sym-community-scripts"
 version = "0.1.0"
 description = "Open Source scripts for use by the Sym community."
-authors = ["Yasyf Mohamedali <yasyf@symops.io>"]
+authors = ["Sym Engineering <pypi@symops.io>"]
 license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
@@ -18,13 +15,57 @@ click = "^7.1.2"
 tabulate = "^0.8.9"
 inquirer = "^2.7.0"
 xattr = "^0.9.7"
+requests = "^2.26.0"
 
 [tool.poetry.dev-dependencies]
-black = "^20.8b1"
+pytest = "^6.1"
+pytest-mock = "^3.3.1"
+dephell = "^0.8.3"
+black = "^21.7b0"
+autoflake = "^1.4"
+isort = "^5.9.3"
 
 [tool.poetry.scripts]
 populate_users = "sym_community_scripts.populate_users:main"
 instances_without_ssm = "sym_community_scripts.instances_without_ssm:main"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["./tests"]
+
+[tool.pylint.messages_control]
+disable = "C0330, C0326"
+
+[tool.pylint.format]
+max-line-length = "100"
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = "E203"
+
+[tool.black]
+line-length = 100
+target-version = ['py37', 'py38']
+include = '(src\/scripts\/.*$|\.pyi?$)'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.dephell.main]
+from = {format = "poetry", path = "pyproject.toml"}
+to = {format = "setuppy", path = "setup.py"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
