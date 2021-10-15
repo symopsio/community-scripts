@@ -1,8 +1,8 @@
 from typing import Dict, Generator, Set, Tuple
 
 import click
-import pdpyras
 import inquirer
+import pdpyras
 
 from .integration import Integration, IntegrationException
 
