@@ -2,7 +2,7 @@
 name = "sym-community-scripts"
 version = "0.1.0"
 description = "Open Source scripts for use by the Sym community."
-authors = ["Yasyf Mohamedali <yasyf@symops.io>"]
+authors = ["Sym Engineering <pypi@symops.io>"]
 license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
@@ -32,18 +32,13 @@ instances_without_ssm = "sym_community_scripts.instances_without_ssm:main"
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q"
-testpaths = [
-    "./tests",
-]
+testpaths = ["./tests"]
 
 [tool.pylint.messages_control]
 disable = "C0330, C0326"
 
-[tool.pylint.MASTER]
-extension-pkg-whitelist = "dependency_injector"
-generated-members = "dependency_inector.*, subcommand, wire"
-good-names = "id, fp, e"
-max-line-length = 120
+[tool.pylint.format]
+max-line-length = "100"
 
 [tool.flake8]
 max-line-length = 100
