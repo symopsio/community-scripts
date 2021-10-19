@@ -5,16 +5,17 @@
 2. Install [`poetry`](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions)
 3. Run `poetry install`
 
-## Find instances without SSM
-
-```
-poetry run instances_without_ssm
-```
 
 ## Populate a User CSV File
 
 ```
 poetry run populate_users users.csv
+```
+
+## Find instances without SSM
+
+```
+poetry run instances_without_ssm
 ```
 
 ### Aptible
