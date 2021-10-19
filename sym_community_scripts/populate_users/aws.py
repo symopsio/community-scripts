@@ -32,12 +32,33 @@ class IAM(Integration, slug="iam"):
         return boto3.client("iam")
 
     def prompt_for_creds(self) -> None:
+        self._iam.get_user()
+
+    def prompt_for_external_id(self) -> str:
         try:
-            self._iam.get_user()
-        except self._iam.exceptions.AccessDeniedException:
-            raise IntegrationException("Access Denied: Please ensure you can GetUser for AWS IAM.")
+            user = self._get_current_iam_user()
+            return self._account_id_from_arn(user["User"]["Arn"])
+        except (KeyError, IndexError):
+            question = inquirer.Text("account_id", message="What AWS account ID?")
+            return inquirer.prompt([question])["account_id"]
+
+    def _get_current_iam_user(self) -> dict:
+        try:
+            return self._iam.get_user()
         except (ClientError, BotoCoreError) as e:
+            # Some error codes are embedded in the basic ClientError and must be parsed from the message itself.
+            error_message = str(e)
+            if "ValidationError" in error_message:
+                raise IntegrationException("You must authenticate using an IAM User's credentials.")
+            elif "AccessDenied" in error_message:
+                raise IntegrationException(
+                    "Access Denied: Please ensure you can GetUser for AWS IAM."
+                )
+
             raise IntegrationException(str(e))
+
+    def _account_id_from_arn(self, arn: str) -> str:
+        return arn.split(":")[4]
 
     def _fetch_user(self, email: str):
         try:
@@ -82,6 +103,16 @@ class SSO(Integration, slug="aws_sso"):
                 choices=options.items(),
             )
             self.instances = inquirer.prompt([question])["instances"]
+
+    def prompt_for_external_id(self) -> str:
+        options = self._get_sso_instances()
+        if len(options) == 1:
+            return list(options.keys())[0]
+
+        question = inquirer.List(
+            "instance_arn", message="Which Instance ARN?", choices=options.items()
+        )
+        return inquirer.prompt([question])["instance_arn"]
 
     def _fetch_identitystore_user(self, instance, email) -> Optional[str]:
         identitystore = boto3.client("identitystore")

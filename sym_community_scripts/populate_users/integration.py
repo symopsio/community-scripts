@@ -22,8 +22,17 @@ class Integration(ABC):
         pass
 
     @abstractmethod
+    def prompt_for_external_id(self) -> str:
+        pass
+
+    @abstractmethod
     def fetch(self, emails: List[str]) -> Dict[str, str]:
         pass
+
+    @classmethod
+    def is_supported(cls, type_: str) -> bool:
+        """Check whether the provided ``type_`` matches any registered Integrations."""
+        return type_ in cls._registry
 
     def env_or_prompt(self, env_var: str, label: str) -> str:
         """

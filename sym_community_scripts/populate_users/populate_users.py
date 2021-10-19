@@ -18,6 +18,9 @@ from .integration import Integration, IntegrationException
 
 
 class PopulateUsers(Script):
+    INQUIRER_SKIP_OPTION = "SELECT TO SKIP"
+    SERVICE_KEY_DELIMITER = ":"
+
     def __init__(self, csv_path: Path, integrations: List[str]) -> None:
         self.csv_path = csv_path
         self.db = self._parse_csv(csv_path)
@@ -25,8 +28,14 @@ class PopulateUsers(Script):
 
     @classmethod
     def _parse_csv(cls, csv_path: Path) -> Dict[str, Dict[str, str]]:
+        all_user_data = {}
         with csv_path.open() as f:
-            return {x["email"]: x for x in csv.DictReader(f)}
+            for user_data in csv.DictReader(f):
+                email = user_data.get(f"sym{cls.SERVICE_KEY_DELIMITER}cloud") or user_data.get(
+                    "email"
+                )
+                all_user_data[email] = user_data
+        return all_user_data
 
     def _missing_emails(self, integration) -> List[str]:
         return [e for e, d in self.db.items() if not d.get(integration)]
@@ -35,31 +44,35 @@ class PopulateUsers(Script):
         return list(next(iter(self.db.values())).keys())
 
     def _default_integrations(self) -> Set[str]:
-        return set(self._integrations()) - {"email"}
-
-    def _parse_xattrs(self) -> Dict:
-        try:
-            import xattr
-
-            connectors = xattr.xattr(self.csv_path)["user.sym.connectors"]
-            return json.loads(connectors)
-        except Exception:
-            return {}
+        return set(self._integrations()) - {
+            "email",
+            f"sym{self.SERVICE_KEY_DELIMITER}cloud",
+            "User ID",
+        }
 
     def _integration_type(self, integration: str) -> str:
         if integration in Integration._registry.keys():
             return integration
-        if cached := self._parse_xattrs().get(integration):
-            return cached
+
         return inquirer.list_input(
-            f"Select Connector for Integration '{integration}'",
-            choices=list(Integration._registry.keys()),
+            f"Select Service for Integration '{integration}'",
+            choices=list(Integration._registry.keys()) + [self.INQUIRER_SKIP_OPTION],
         )
 
     def _ensure_integration(self, integration: str):
         if integration not in self._integrations():
             for row in self.db.values():
                 row[integration] = ""
+
+    def _parse_integration_type_from_key(self, key: str) -> str:
+        """From a key such as ``slack:T12345`` or ``google:symops.io``,
+        parse out the integration type. If there is no separator, assumes
+        the entire key represents the integration type.
+        """
+        try:
+            return key.split(":")[0]
+        except IndexError:
+            return key
 
     def write_db(self):
         with self.csv_path.open("w") as f:
@@ -72,13 +85,23 @@ class PopulateUsers(Script):
         for integration in self.integrations:
             click.secho(f"\nIntegration: {integration}", bold=True)
 
-            integration_type = self._integration_type(integration)
+            integration_type = self._parse_integration_type_from_key(integration)
+            if not integration_type or not Integration.is_supported(integration_type):
+                integration_type = self._integration_type(integration)
+
+            if integration_type == self.INQUIRER_SKIP_OPTION:
+                continue
+
             klass = Integration._registry[integration_type]()
-            click.secho(f"Connector: {integration_type}")
+            click.secho(f"Service: {integration_type}")
+            integration_header = integration
+            if self.SERVICE_KEY_DELIMITER not in integration_header:
+                external_id = klass.prompt_for_external_id()
+                integration_header = f"{integration}:{external_id}"
 
-            self._ensure_integration(integration)
+            self._ensure_integration(integration_header)
 
-            emails = self._missing_emails(integration)
+            emails = self._missing_emails(integration_header)
             if not emails:
                 continue
 
@@ -90,7 +113,7 @@ class PopulateUsers(Script):
                 continue
 
             for email, value in results.items():
-                self.db[email][integration] = value
+                self.db[email][integration_header] = value
             click.secho(f"Updated {len(results)} rows!", fg="green")
 
             remaining = len(emails) - len(results)

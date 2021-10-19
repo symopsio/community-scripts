@@ -9,6 +9,9 @@ class IntegrationStub(Integration, slug="test"):
     def prompt_for_creds(self) -> None:
         pass
 
+    def prompt_for_external_id(self) -> str:
+        pass
+
     def fetch(self, emails: Set[str]) -> Dict[str, str]:
         pass
 
