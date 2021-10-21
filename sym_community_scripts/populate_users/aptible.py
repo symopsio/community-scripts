@@ -1,6 +1,7 @@
 from typing import Any, Dict, Generator, Set, Tuple
 
 import click
+import inquirer
 import requests
 from requests.exceptions import InvalidJSONError
 
@@ -47,6 +48,10 @@ class Aptible(Integration, slug="aptible"):
             self.token = json["access_token"]
         except KeyError:
             raise IntegrationException("Invalid credentials! Missing access_token.")
+
+    def prompt_for_external_id(self) -> str:
+        question = inquirer.Text("organization_id", message="What is your Aptible Organization ID?")
+        return inquirer.prompt([question])["organization_id"]
 
     def _fetch_aptible_resource(self, path: str) -> Dict[str, Any]:
         r = requests.get(
