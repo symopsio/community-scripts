@@ -6,7 +6,6 @@
 # License: BSD-3-Clause
 
 import csv
-import json
 from pathlib import Path
 from typing import Dict, List, Set
 
@@ -21,10 +20,17 @@ class PopulateUsers(Script):
     INQUIRER_SKIP_OPTION = "SELECT TO SKIP"
     SERVICE_KEY_DELIMITER = ":"
 
-    def __init__(self, csv_path: Path, integrations: List[str]) -> None:
+    def __init__(
+        self,
+        csv_path: Path,
+        integrations: List[str],
+        *,
+        import_new: bool,
+    ) -> None:
         self.csv_path = csv_path
         self.db = self._parse_csv(csv_path)
         self.integrations = set(integrations) or self._default_integrations()
+        self.import_new = import_new
 
     @classmethod
     def _parse_csv(cls, csv_path: Path) -> Dict[str, Dict[str, str]]:
@@ -101,9 +107,12 @@ class PopulateUsers(Script):
 
             self._ensure_integration(integration_header)
 
-            emails = self._missing_emails(integration_header)
-            if not emails:
-                continue
+            if self.import_new and klass.supports_importing_new():
+                emails = None
+            else:
+                emails = self._missing_emails(integration_header)
+                if not emails:
+                    continue
 
             try:
                 klass.prompt_for_creds()
@@ -130,7 +139,8 @@ class PopulateUsers(Script):
         exists=True, file_okay=True, dir_okay=False, readable=True, writable=True, resolve_path=True
     ),
 )
+@click.option("--import-new/--no-import-new", default=False)
 @click.option("-i", "--integration", multiple=True, type=str)
-def populate_users(csv_path: str, integration: List[str]):
-    s = PopulateUsers(Path(csv_path), integration)
+def populate_users(csv_path: str, import_new: bool, integration: List[str]):
+    s = PopulateUsers(Path(csv_path), integration, import_new=import_new)
     s.run()

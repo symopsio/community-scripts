@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generator, Set, Tuple
+from typing import Any, Dict, Generator, Optional, Set, Tuple
 
 import click
 import inquirer
@@ -89,9 +89,9 @@ class Aptible(Integration, slug="aptible"):
         except KeyError as e:
             raise IntegrationException(f"Unexpected response from Aptible! Missing user key: {e}")
 
-    def fetch(self, emails: Set[str]) -> Dict[str, str]:
+    def fetch(self, emails: Optional[Set[str]]) -> Dict[str, str]:
         results = {}
         for (email, id) in self._fetch_all_users():
-            if email in emails:
+            if not emails or email in emails:
                 results[email] = id
         return results
