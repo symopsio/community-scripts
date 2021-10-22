@@ -19,6 +19,9 @@ from .integration import Integration, IntegrationException
 class PopulateUsers(Script):
     INQUIRER_SKIP_OPTION = "SELECT TO SKIP"
     SERVICE_KEY_DELIMITER = ":"
+    EMAIL_KEY = "email"
+    USER_ID_KEY = "User ID"
+    SYM_CLOUD_KEY = f"sym{SERVICE_KEY_DELIMITER}cloud"
 
     def __init__(
         self,
@@ -51,9 +54,9 @@ class PopulateUsers(Script):
 
     def _default_integrations(self) -> Set[str]:
         return set(self._integrations()) - {
-            "email",
-            f"sym{self.SERVICE_KEY_DELIMITER}cloud",
-            "User ID",
+            self.EMAIL_KEY,
+            self.SYM_CLOUD_KEY,
+            self.USER_ID_KEY,
         }
 
     def _integration_type(self, integration: str) -> str:
@@ -122,7 +125,15 @@ class PopulateUsers(Script):
                 continue
 
             for email, value in results.items():
-                self.db[email][integration_header] = value
+                if self.db.get(email):
+                    self.db[email][integration_header] = value
+                else:
+                    self.db[email] = {
+                        self.USER_ID_KEY: None,
+                        integration_header: value,
+                        self.SYM_CLOUD_KEY: email,
+                    }
+
             click.secho(f"Updated {len(results)} rows!", fg="green")
 
             remaining = len(emails) - len(results)
@@ -136,7 +147,12 @@ class PopulateUsers(Script):
 @click.argument(
     "csv_path",
     type=click.Path(
-        exists=True, file_okay=True, dir_okay=False, readable=True, writable=True, resolve_path=True
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        writable=True,
+        resolve_path=True,
     ),
 )
 @click.option("--import-new/--no-import-new", default=False)
