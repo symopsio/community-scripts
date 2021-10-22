@@ -62,13 +62,10 @@ class Aptible(Integration, slug="aptible"):
         )
 
         if r.status_code != 200:
-            json = {}
             try:
-                json = r.json()
-            except InvalidJSONError as e:
-                pass
-
-            message = json.get("message", "")
+                message = r.json()["message"]
+            except (InvalidJSONError, KeyError):
+                message = ""
             raise IntegrationException(f"Aptible connection issue! {message} ({r.status_code})")
 
         try:
