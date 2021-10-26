@@ -94,6 +94,6 @@ class Aptible(Integration, slug="aptible"):
     def fetch(self, emails: Optional[Set[str]]) -> Dict[str, str]:
         results = {}
         for (email, id) in self._fetch_all_users():
-            if not emails or email not in emails:
+            if not emails or email in emails:
                 results[email] = id
         return results
