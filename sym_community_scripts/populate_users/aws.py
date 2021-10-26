@@ -26,7 +26,13 @@ class _AWSPaginator:
             self.next_token = res["NextToken"]
 
 
-class IAM(Integration, slug="iam"):
+class AWSIntegration:
+    @classmethod
+    def supports_importing_new(cls) -> bool:
+        return False
+
+
+class IAM(Integration, AWSIntegration, slug="iam"):
     @cached_property
     def _iam(self):
         return boto3.client("iam")
@@ -75,7 +81,7 @@ class IAM(Integration, slug="iam"):
         return results
 
 
-class SSO(Integration, slug="aws_sso"):
+class SSO(Integration, AWSIntegration, slug="aws_sso"):
     def __init__(self) -> None:
         self.instances = []
 

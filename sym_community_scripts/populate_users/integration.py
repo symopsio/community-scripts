@@ -1,6 +1,6 @@
 import os
 from abc import ABC, abstractmethod
-from typing import Dict, List, Type
+from typing import Dict, Optional, Set, Type
 
 import click
 from click import ClickException
@@ -26,8 +26,12 @@ class Integration(ABC):
         pass
 
     @abstractmethod
-    def fetch(self, emails: List[str]) -> Dict[str, str]:
+    def fetch(self, emails: Optional[Set[str]]) -> Dict[str, str]:
         pass
+
+    @classmethod
+    def supports_importing_new(cls) -> bool:
+        return True
 
     @classmethod
     def is_supported(cls, type_: str) -> bool:

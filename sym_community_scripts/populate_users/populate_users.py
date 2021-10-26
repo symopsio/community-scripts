@@ -6,7 +6,6 @@
 # License: BSD-3-Clause
 
 import csv
-import json
 from pathlib import Path
 from typing import Dict, List, Set
 
@@ -20,11 +19,21 @@ from .integration import Integration, IntegrationException
 class PopulateUsers(Script):
     INQUIRER_SKIP_OPTION = "SELECT TO SKIP"
     SERVICE_KEY_DELIMITER = ":"
+    EMAIL_KEY = "email"
+    USER_ID_KEY = "User ID"
+    SYM_CLOUD_KEY = f"sym{SERVICE_KEY_DELIMITER}cloud"
 
-    def __init__(self, csv_path: Path, integrations: List[str]) -> None:
+    def __init__(
+        self,
+        csv_path: Path,
+        integrations: List[str],
+        *,
+        import_new: bool,
+    ) -> None:
         self.csv_path = csv_path
         self.db = self._parse_csv(csv_path)
         self.integrations = set(integrations) or self._default_integrations()
+        self.import_new = import_new
 
     @classmethod
     def _parse_csv(cls, csv_path: Path) -> Dict[str, Dict[str, str]]:
@@ -37,17 +46,17 @@ class PopulateUsers(Script):
                 all_user_data[email] = user_data
         return all_user_data
 
-    def _missing_emails(self, integration) -> List[str]:
-        return [e for e, d in self.db.items() if not d.get(integration)]
+    def _missing_emails(self, integration) -> Set[str]:
+        return set(e for e, d in self.db.items() if not d.get(integration))
 
     def _integrations(self) -> List[str]:
         return list(next(iter(self.db.values())).keys())
 
     def _default_integrations(self) -> Set[str]:
         return set(self._integrations()) - {
-            "email",
-            f"sym{self.SERVICE_KEY_DELIMITER}cloud",
-            "User ID",
+            self.EMAIL_KEY,
+            self.SYM_CLOUD_KEY,
+            self.USER_ID_KEY,
         }
 
     def _integration_type(self, integration: str) -> str:
@@ -101,9 +110,12 @@ class PopulateUsers(Script):
 
             self._ensure_integration(integration_header)
 
-            emails = self._missing_emails(integration_header)
-            if not emails:
-                continue
+            if self.import_new and klass.supports_importing_new():
+                emails = None
+            else:
+                emails = self._missing_emails(integration_header)
+                if not emails:
+                    continue
 
             try:
                 klass.prompt_for_creds()
@@ -112,8 +124,19 @@ class PopulateUsers(Script):
                 click.secho(f"Error: {e.format_message()}", fg="red")
                 continue
 
+            if not emails:
+                emails = list(results.keys())
+
             for email, value in results.items():
-                self.db[email][integration_header] = value
+                if self.db.get(email):
+                    self.db[email][integration_header] = value
+                else:
+                    self.db[email] = {
+                        self.USER_ID_KEY: None,
+                        integration_header: value,
+                        self.SYM_CLOUD_KEY: email,
+                    }
+
             click.secho(f"Updated {len(results)} rows!", fg="green")
 
             remaining = len(emails) - len(results)
@@ -127,10 +150,16 @@ class PopulateUsers(Script):
 @click.argument(
     "csv_path",
     type=click.Path(
-        exists=True, file_okay=True, dir_okay=False, readable=True, writable=True, resolve_path=True
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        writable=True,
+        resolve_path=True,
     ),
 )
+@click.option("--import-new/--no-import-new", default=False)
 @click.option("-i", "--integration", multiple=True, type=str)
-def populate_users(csv_path: str, integration: List[str]):
-    s = PopulateUsers(Path(csv_path), integration)
+def populate_users(csv_path: str, import_new: bool, integration: List[str]):
+    s = PopulateUsers(Path(csv_path), integration, import_new=import_new)
     s.run()

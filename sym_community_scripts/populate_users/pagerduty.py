@@ -1,6 +1,5 @@
-from typing import Dict, Generator, Set, Tuple
+from typing import Dict, Generator, Optional, Set, Tuple
 
-import click
 import inquirer
 import pdpyras
 
@@ -27,9 +26,9 @@ class PagerDuty(Integration, slug="pagerduty"):
         for user in self.session.iter_all("users"):
             yield user["email"], user["id"]
 
-    def fetch(self, emails: Set[str]) -> Dict[str, str]:
+    def fetch(self, emails: Optional[Set[str]]) -> Dict[str, str]:
         results = {}
         for (email, id) in self._fetch_all_users():
-            if email in emails:
+            if not emails or email in emails:
                 results[email] = id
         return results
