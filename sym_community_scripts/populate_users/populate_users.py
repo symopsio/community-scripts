@@ -46,8 +46,8 @@ class PopulateUsers(Script):
                 all_user_data[email] = user_data
         return all_user_data
 
-    def _missing_emails(self, integration) -> List[str]:
-        return [e for e, d in self.db.items() if not d.get(integration)]
+    def _missing_emails(self, integration) -> Set[str]:
+        return set(e for e, d in self.db.items() if not d.get(integration))
 
     def _integrations(self) -> List[str]:
         return list(next(iter(self.db.values())).keys())
@@ -123,6 +123,9 @@ class PopulateUsers(Script):
             except IntegrationException as e:
                 click.secho(f"Error: {e.format_message()}", fg="red")
                 continue
+
+            if not emails:
+                emails = list(results.keys())
 
             for email, value in results.items():
                 if self.db.get(email):
