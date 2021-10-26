@@ -50,9 +50,7 @@ class Aptible(Integration, slug="aptible"):
             raise IntegrationException("Invalid credentials! Missing access_token.")
 
     def prompt_for_external_id(self) -> str:
-        question = inquirer.Text(
-            "organization_id", message="What is your Aptible Organization ID?"
-        )
+        question = inquirer.Text("organization_id", message="What is your Aptible Organization ID?")
         return inquirer.prompt([question])["organization_id"]
 
     def _fetch_aptible_resource(self, path: str) -> Dict[str, Any]:
